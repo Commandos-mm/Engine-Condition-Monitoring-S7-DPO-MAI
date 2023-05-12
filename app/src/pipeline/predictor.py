@@ -1,3 +1,5 @@
+from typing import TypeAlias
+
 import pandas as pd
 from typing import Dict, Tuple, Any
 
