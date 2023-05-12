@@ -8,11 +8,12 @@ packages = [{include = "s7_engine_condition_calculator"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-pandas = "^2.0.1"
+streamlit = "^1.22.0"
 
 
 [tool.poetry.group.dev.dependencies]
 watchfiles = "^0.19.0"
+ipython = "^8.13.2"
 
 [build-system]
 requires = ["poetry-core"]
