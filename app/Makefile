@@ -5,7 +5,7 @@ install:
 
 .PHONY: run-local
 run-local:
-	poetry run watchfiles "poetry run python src/main.py" src/
+	poetry run streamlit run src/main.py
 
 .PHONY: build
 build: 
