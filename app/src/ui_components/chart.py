@@ -3,8 +3,8 @@ import pandas as pd
 
 metric_column_names = {'ZT49_D'}
 
+
 def get_chart(dataset: pd.DataFrame) -> alt.Chart:
-        
     drawing_dataset = (
         dataset[['flight_datetime', *metric_column_names]]
         .astype({'flight_datetime': 'datetime64[ns]'})
