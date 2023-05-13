@@ -1,32 +1,23 @@
-from collections import defaultdict
-
 import streamlit as st
-import pandas as pd
 
 import pipeline
 
-from pipeline.predictor import EngineFamily, FlightPhase
 import ui_components as components
 
 st.set_page_config(
     layout="wide"
 )
 
-
-def transform_inference(dataset) -> dict[EngineFamily, dict[FlightPhase, pd.DataFrame]]:
-    res = defaultdict(dict)
-    for (phase, family_id), inference in dataset.items():
-        res[family_id][phase] = inference
-    
-    return res
-
-
 ts = components.load_dataset()
 
 engine_inference_mapping = pipeline.predict(ts)
 
-for family_id, inference_by_phase in transform_inference(engine_inference_mapping).items():
-    chartl = components.chart.get_chart(inference_by_phase['TAKEOFF'])
-    chartr = components.chart.get_chart(inference_by_phase['CRUISE'])
-    with components.PageLayout() as page:
-        page.altair_chart(chartl | chartr, theme="streamlit", use_container_width=True)
+# TODO: remove
+HARDCODED_ENGINE_FAMILY: str = "CFM56-7"
+HARDCODED_ENGINE_ID: str = "364a94e57c5e7705c650bdadda955186d3a8f9d96a3d9ec0f32964ef9c09b494"
+
+single_inference = engine_inference_mapping[HARDCODED_ENGINE_FAMILY][HARDCODED_ENGINE_ID]
+chart_takeoff = components.chart.get_chart(single_inference['TAKEOFF'])
+chart_cruise = components.chart.get_chart(single_inference['CRUISE'])
+with components.PageLayout() as page:
+    page.altair_chart(chart_takeoff | chart_cruise, theme="streamlit", use_container_width=True)
