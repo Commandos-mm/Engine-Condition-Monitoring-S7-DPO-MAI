@@ -1,12 +1,15 @@
 from typing import TypeAlias, Literal
+from collections import defaultdict
 
 import pandas as pd
 
 FlightPhase = Literal['CRUISE', 'TAKEOFF']
 EngineFamily: TypeAlias = str
+EngineId: TypeAlias = str
+Inference: TypeAlias = dict[EngineFamily, dict[EngineId, dict[FlightPhase, pd.DataFrame]]]
  
 
-def predict(input: pd.DataFrame) -> dict[tuple[FlightPhase, EngineFamily], pd.DataFrame]:
+def predict(input: pd.DataFrame) -> Inference:
     """
     Mock function for maintenance characteristics prediction.
     :param input: input DataFrame of aircraft and engine characteristics.
@@ -15,10 +18,9 @@ def predict(input: pd.DataFrame) -> dict[tuple[FlightPhase, EngineFamily], pd.Da
     output: pd.DataFrame = pd.read_csv("src/pipeline/data/y.csv")
     sub_input: pd.DataFrame = input[["engine_id", "flight_datetime", "flight_phase", "engine_family"]]
     df: pd.DataFrame = pd.merge(sub_input, output, on=["engine_id", "flight_datetime", "flight_phase"])
-    phase_df = {k: v for k, v in df.groupby("flight_phase")}
-    grouped_output = {
-        (phase_key, engine_family_key): df_value
-        for phase_key, df in phase_df.items()
-        for engine_family_key, df_value in df.groupby("engine_family")
-    }
+    grouped_output = defaultdict(lambda: defaultdict(dict))
+    for (ef, ei, fp), grouped_df in df.groupby(["engine_family", "engine_id", "flight_phase"]):
+        grouped_output[ef][ei][fp] = grouped_df
+        grouped_output[ef][ei][fp].drop(columns=["engine_family", "engine_id", "flight_phase"],
+                                        inplace=True)
     return grouped_output
