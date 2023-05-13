@@ -1,6 +1,3 @@
-from typing import TypeAlias
-
-import altair as alt
 from collections import defaultdict
 
 import streamlit as st
@@ -24,17 +21,12 @@ def transform_inference(dataset) -> dict[EngineFamily, dict[FlightPhase, pd.Data
     return res
 
 
-
 ts = components.load_dataset()
 
 engine_inference_mapping = pipeline.predict(ts)
 
 for family_id, inference_by_phase in transform_inference(engine_inference_mapping).items():
-    
     chartl = components.chart.get_chart(inference_by_phase['TAKEOFF'])
     chartr = components.chart.get_chart(inference_by_phase['CRUISE'])
-    _, col, _ = st.columns([1, 12, 1])
-    col.altair_chart(chartl | chartr, theme="streamlit", use_container_width=True)
-
-
-
+    with components.PageLayout() as page:
+        page.altair_chart(chartl | chartr, theme="streamlit", use_container_width=True)
