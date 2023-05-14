@@ -7,6 +7,37 @@ from .page_layout_manager import PageLayout
 
 metric_column_names = {'ZT49_D'}
 
+METRIC_DECRIPTION = {
+    'BRAT': 'BLEED RATIO',
+    'DEGT': 'EGT DEVIATION FROM BASELINE',
+    'DELFN': 'THRUST DERATE',
+    'DELN1': 'FAN SPEED DERATE',
+    'DELVSV': 'VARIABLE STATOR VANE DEVIATION FROM NOMINAL DPOIL - DELTA OIL PRESSURE',
+    'EGTC': 'BASELINE EGT VALUE',
+    'EGTHDM': 'EGT MARGIN WITH ADJUSTMENT',
+    'EGTHDM_D': 'DVG EGT MARGIN WITH ADJUSTMENT',
+    'GEGTMC': 'EGT ETOPS MARGIN (DEG C) CR',
+    'GN2MC': 'N2 ETOPS MARGIN (%) CRUISE',
+    'GPCN25': 'CORE SPEED DEVIATION FROM BASELINE',
+    'GWFM': 'FUEL FLOW DEVIATION FROM BASELINE',
+    'PCN12': 'PHYSICAL FAN SPEED (%)',
+    'PCN12I': 'INDICATED FAN SPEED (%)',
+    'PCN1AR': 'CORRECTED FAN SPEED (%)',
+    'PCN1BR': 'CORR FAN SPEED VARIABLE THET',
+    'PCN1K': 'CORRECTED FAN SPEED (%)',
+    'PCN2C': 'BASELINE CORE SPEED',
+    'SLOATL': 'SEA LEVEL OATL',
+    'SLOATL_D': 'DVG SEA LEVEL OATL',
+    'VSVNOM': 'SCHEDULE VSV POSITION',
+    'WBE': 'MEASURED ENGINE BLEED FLOW',
+    'WBI': 'ENG BLEED SETTING FOR PEM',
+    'WFMP': 'BASELINE FUEL FLOW',
+    'ZPCN25_D': 'DVG N2 (HIGH SPEED ROTOR) (%RPM)',
+    'ZT49_D': 'DVG EGT-HPT DISCHRG TOT TMP(DEG)',
+    'ZTLA_D': 'DVG THROTTLE LEVER ANGLE(DEG)',
+    'ZTNAC_D': 'DVG NACELLE TEMP(DEG C)',
+    'ZWF36_D': 'DVG FUEL FLOW',
+}
 
 def get_dates_range(engine_df: dict[str, pd.DataFrame]):
     print(engine_df['TAKEOFF']["predicted_y"].dtypes)
@@ -53,10 +84,12 @@ def metric_graphics(metric_name: str, engine_inference, date_range):
             left_title_column.write("<div style='text-align: center;'>Takeoff</div>", unsafe_allow_html=True)
             right_title_column.write("<div style='text-align: center;'>Cruise</div>", unsafe_allow_html=True)
             page.altair_chart(chartl | chartr, theme="streamlit", use_container_width=True)
+            if desc := METRIC_DECRIPTION.get(metric_name):
+                page.markdown(f"{metric_name} — {desc}")
 
 
 def engine_graphics(engine_inference, date_range):
-    metric_names = set(engine_inference['TAKEOFF'].columns).difference(['flight_datetime'])
+    metric_names = set(engine_inference['TAKEOFF']['predicted_y'].columns).difference(['flight_datetime'])
 
     for metric_name in metric_names:
         metric_graphics(metric_name, engine_inference, date_range)
