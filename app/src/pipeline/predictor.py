@@ -1,13 +1,31 @@
-from typing import TypeAlias, Literal
+from typing import TypeAlias, Literal, TypedDict
 from collections import defaultdict
 
 import pandas as pd
 
+class EngineDataset(TypedDict):
+    predicted_y: pd.DataFrame
+    real_y: pd.DataFrame | None
+
+
 FlightPhase = Literal['CRUISE', 'TAKEOFF']
 EngineFamily: TypeAlias = str
 EngineId: TypeAlias = str
-Inference: TypeAlias = dict[EngineFamily, dict[EngineId, dict[FlightPhase, pd.DataFrame]]]
+Inference: TypeAlias = dict[
+    EngineFamily, dict[
+        EngineId, dict[FlightPhase, EngineDataset]
+    ]
+]
  
+class Pipeline():
+    def __init__(self, input, real_y = None) -> None:
+        pass
+   
+    def predict():
+        ...
+    
+    def getformated_data() -> Inference:
+        ...
 
 def predict(input: pd.DataFrame) -> Inference:
     """
