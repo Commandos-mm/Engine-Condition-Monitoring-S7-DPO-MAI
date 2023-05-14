@@ -49,6 +49,9 @@ def metric_graphics(metric_name: str, engine_inference, date_range):
         chartl = get_chart(slice_df(engine_inference['TAKEOFF']["predicted_y"], date_range), metric_name)
         chartr = get_chart(slice_df(engine_inference['CRUISE']["predicted_y"], date_range), metric_name)
         with PageLayout() as page:
+            _, left_title_column, _, right_title_column, _ = st.columns([1, 5, 1, 5, 1])
+            left_title_column.write("<div style='text-align: center;'>Takeoff</div>", unsafe_allow_html=True)
+            right_title_column.write("<div style='text-align: center;'>Cruise</div>", unsafe_allow_html=True)
             page.altair_chart(chartl | chartr, theme="streamlit", use_container_width=True)
 
 
