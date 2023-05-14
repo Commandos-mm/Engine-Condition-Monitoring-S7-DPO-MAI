@@ -1,6 +1,7 @@
 import streamlit as st
 import altair as alt
 import pandas as pd
+import streamlit_nested_layout
 
 from .page_layout_manager import PageLayout
 
@@ -44,21 +45,28 @@ def slice_df(dataset: pd.DataFrame, ts_range):
       
 
 
+def metric_graphics(metric_name: str, engine_inference, date_range):
+    with st.expander(metric_name):
+        chartl = get_chart(slice_df(engine_inference['TAKEOFF'], date_range), metric_name)
+        chartr = get_chart(slice_df(engine_inference['CRUISE'], date_range), metric_name)
+        with PageLayout() as page:
+            page.altair_chart(chartl | chartr, theme="streamlit", use_container_width=True)
+
 
 def engine_graphics(engine_inference, date_range):
-    chartl = get_chart(slice_df(engine_inference['TAKEOFF'], date_range))
-    chartr = get_chart(slice_df(engine_inference['CRUISE'], date_range))
-    with PageLayout() as page:
-        page.altair_chart(chartl | chartr, theme="streamlit", use_container_width=True)
+    metric_names = set(engine_inference['TAKEOFF'].columns).difference(['flight_datetime'])
+
+    for metric_name in metric_names:
+        metric_graphics(metric_name, engine_inference, date_range)
 
 
 def family_accordion(engine_family_id: str, family_inference: dict):
     with st.expander(f'Engine family: {engine_family_id}'):
         family_page_info(engine_family_id, family_inference)
 
-def get_chart(dataset: pd.DataFrame) -> alt.Chart:
+def get_chart(dataset: pd.DataFrame, metric_name: str) -> alt.Chart:
     drawing_dataset = (
-        dataset[['flight_datetime', *metric_column_names]]
+        dataset[['flight_datetime', metric_name]]
         .astype({'flight_datetime': 'datetime64[ns]'})
     )
 
@@ -67,7 +75,7 @@ def get_chart(dataset: pd.DataFrame) -> alt.Chart:
         .mark_circle()
         .encode(
             x='flight_datetime:T',
-            y=f'ZT49_D:Q',
+            y=f'{metric_name}:Q',
         )
         .interactive()
     )

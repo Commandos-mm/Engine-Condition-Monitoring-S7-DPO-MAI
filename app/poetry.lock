@@ -664,6 +664,17 @@ watchdog = {version = "*", markers = "platform_system != \"Darwin\""}
 snowflake = ["snowflake-snowpark-python"]
 
 [[package]]
+name = "streamlit-nested-layout"
+version = "0.1.1"
+description = "Enables nested layout in streamlit."
+category = "main"
+optional = false
+python-versions = ">=3.7, !=3.9.7"
+
+[package.dependencies]
+streamlit = ">=1.10.0"
+
+[[package]]
 name = "tenacity"
 version = "8.2.2"
 description = "Retry code until it succeeds"
@@ -814,7 +825,7 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "d376894c337a02cf7e5a952ca06b62d7e5e139798ef89377232ddfb3cfcda705"
+content-hash = "ee5b62d9cfe0da49c0a738134699ffb6837140f79f24b410c7aa28b868192bd5"
 
 [metadata.files]
 altair = [
@@ -1330,6 +1341,9 @@ stack-data = [
 streamlit = [
     {file = "streamlit-1.22.0-py2.py3-none-any.whl", hash = "sha256:520dd9b9e6efb559b5a9a22feadb48b1e6f0340ec83da3514810059fdecd4167"},
     {file = "streamlit-1.22.0.tar.gz", hash = "sha256:5bef9bf8deef32814d9565c9df48331e6357eb0b90dabc3ec4f53c44fb34fc73"},
+]
+streamlit-nested-layout = [
+    {file = "streamlit-nested-layout-0.1.1.tar.gz", hash = "sha256:8b7ce4d90b76ff8f4fff2cf7b30ae262cd2c068722e5439a3618f9a412ed82fb"},
 ]
 tenacity = [
     {file = "tenacity-8.2.2-py3-none-any.whl", hash = "sha256:2f277afb21b851637e8f52e6a613ff08734c347dc19ade928e519d7d2d8569b0"},
