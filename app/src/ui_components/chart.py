@@ -9,7 +9,7 @@ metric_column_names = {'ZT49_D'}
 def get_dates_range(engine_df: dict[str, pd.DataFrame]):
     print(engine_df['TAKEOFF'].dtypes)
     engine_df['TAKEOFF'].flight_datetime = engine_df['TAKEOFF'].flight_datetime.astype('datetime64[ns]')
-    engine_df['CRUISE'].flight_datetime  = engine_df['CRUISE'].flight_datetime .astype('datetime64[ns]')
+    engine_df['CRUISE'].flight_datetime  = engine_df['CRUISE'].flight_datetime.astype('datetime64[ns]')
     min_takeoff_ts, max_takeoff_ts = engine_df['TAKEOFF']['flight_datetime'].agg(['min', 'max'])
     min_cruise_ts, max_cruise_ts = engine_df['CRUISE']['flight_datetime'].agg(['min', 'max'])
     min_ts = min(min_cruise_ts, min_takeoff_ts)
@@ -42,6 +42,8 @@ def slice_df(dataset: pd.DataFrame, ts_range):
     filtered_df = df[(df['flight_datetime'] >= min_ts) & (df['flight_datetime'] <= max_ts)]
     return filtered_df
       
+
+
 
 def engine_graphics(engine_inference, date_range):
     chartl = get_chart(slice_df(engine_inference['TAKEOFF'], date_range))
