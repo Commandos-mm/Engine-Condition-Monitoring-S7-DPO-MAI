@@ -10,7 +10,9 @@ st.set_page_config(
 
 ts = components.load_dataset()
 
-engine_inference_mapping = pipeline.predict(ts)
+pl = pipeline.Pipeline(ts)
+pl.predict()
+engine_inference_mapping = pl.get_fmt_data()
 
 for family_id, inference_by_phase in engine_inference_mapping.items():
     components.chart.family_accordion(family_id, inference_by_phase)
