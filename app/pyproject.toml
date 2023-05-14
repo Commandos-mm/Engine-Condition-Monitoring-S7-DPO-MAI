@@ -9,6 +9,7 @@ packages = [{include = "s7_engine_condition_calculator"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 streamlit = "^1.22.0"
+streamlit-nested-layout = "^0.1.1"
 
 
 [tool.poetry.group.dev.dependencies]
