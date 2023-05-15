@@ -40,9 +40,6 @@ METRIC_DECRIPTION = {
 }
 
 def get_dates_range(engine_df: dict[str, pd.DataFrame]):
-    print(engine_df['TAKEOFF']["predicted_y"].dtypes)
-    engine_df['TAKEOFF']["predicted_y"].flight_datetime = engine_df['TAKEOFF']["predicted_y"].flight_datetime.astype('datetime64[ns]')
-    engine_df['CRUISE']["predicted_y"].flight_datetime = engine_df['CRUISE']["predicted_y"].flight_datetime.astype('datetime64[ns]')
     min_takeoff_ts, max_takeoff_ts = engine_df['TAKEOFF']["predicted_y"]['flight_datetime'].agg(['min', 'max'])
     min_cruise_ts, max_cruise_ts = engine_df['CRUISE']["predicted_y"]['flight_datetime'].agg(['min', 'max'])
     min_ts = min(min_cruise_ts, min_takeoff_ts)
@@ -68,22 +65,26 @@ def family_page_info(engine_family_id, family_inference):
     engine_graphics(family_inference[engine_id], date_range)
 
 
-def slice_df(dataset: pd.DataFrame, ts_range):
-    df = dataset
+def slice_df(datasets: dict[str, pd.DataFrame], ts_range):
     min_ts, max_ts = ts_range
-    filtered_df = df[(df['flight_datetime'] >= min_ts) & (df['flight_datetime'] <= max_ts)]
-    return filtered_df
+    return {
+    key: df[(df['flight_datetime'] >= min_ts) & (df['flight_datetime'] <= max_ts)]
+    if isinstance(df, pd.DataFrame)
+    else None
+    for key, df in datasets.items()
+}
 
 
 def metric_graphics(metric_name: str, engine_inference, date_range):
     with st.expander(metric_name):
-        chartl = get_chart(slice_df(engine_inference['TAKEOFF']["predicted_y"], date_range), metric_name)
-        chartr = get_chart(slice_df(engine_inference['CRUISE']["predicted_y"], date_range), metric_name)
+        chartl = get_chart(slice_df(engine_inference['TAKEOFF'], date_range), metric_name)
+        chartr = get_chart(slice_df(engine_inference['CRUISE'], date_range), metric_name)
         with PageLayout() as page:
-            _, left_title_column, _, right_title_column, _ = st.columns([1, 5, 1, 5, 1])
-            left_title_column.write("<div style='text-align: center;'>Takeoff</div>", unsafe_allow_html=True)
-            right_title_column.write("<div style='text-align: center;'>Cruise</div>", unsafe_allow_html=True)
-            page.altair_chart(chartl | chartr, theme="streamlit", use_container_width=True)
+            page.write("Takeoff")
+            page.altair_chart(chartl, theme="streamlit", use_container_width=True)
+            page.write("Cruise")
+            page.altair_chart(chartr, theme="streamlit", use_container_width=True)
+
             if desc := METRIC_DECRIPTION.get(metric_name):
                 page.markdown(f"{metric_name} — {desc}")
 
@@ -100,11 +101,25 @@ def family_accordion(engine_family_id: str, family_inference: dict):
         family_page_info(engine_family_id, family_inference)
 
 
-def get_chart(dataset: pd.DataFrame, metric_name: str) -> alt.Chart:
-    drawing_dataset = (
-        dataset[['flight_datetime', metric_name]]
-        .astype({'flight_datetime': 'datetime64[ns]'})
+def get_chart(datasets: dict[str, pd.DataFrame], metric_name: str) -> alt.Chart:
+    predicted_y = datasets['predicted_y']
+    predicted_y = (
+        predicted_y[['flight_datetime', metric_name]]
     )
+    color_options = {}
+    # real_y = datasets.get('real_y')
+    # if real_y is not None:
+    #     real_y = (
+    #         real_y[['flight_datetime', metric_name]]
+    #     )
+
+    #     predicted_y['label'] = 'predicted_y'
+    #     real_y['label'] = 'real_y'
+    #     color_options['color'] = 'label:N'
+    #     drawing_dataset = pd.concat((predicted_y, real_y))
+    # else:
+    drawing_dataset = predicted_y
+    
 
     chart = (
         alt.Chart(drawing_dataset)
@@ -112,6 +127,7 @@ def get_chart(dataset: pd.DataFrame, metric_name: str) -> alt.Chart:
         .encode(
             x='flight_datetime:T',
             y=f'{metric_name}:Q',
+            **color_options,
         )
         .interactive()
     )

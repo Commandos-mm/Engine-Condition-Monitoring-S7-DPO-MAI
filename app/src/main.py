@@ -8,9 +8,9 @@ st.set_page_config(
     layout="wide"
 )
 
-ts = components.load_dataset()
+ts, real_y = components.load_dataset()
 
-pl = pipeline.Pipeline(ts)
+pl = pipeline.Pipeline(ts, ground_truth=real_y)
 pl.predict()
 engine_inference_mapping = pl.get_fmt_data()
 
