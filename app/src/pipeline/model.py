@@ -54,7 +54,7 @@ class Model:
         if not matches:
             raise Exception(f"Model error in pickle format. Couldn't find engine family {filename}")
         engine_family: str = matches[0]
-        metric: str = filename[5:-4]
+        metric: str = filename[5:-4] if engine_family != 'CFM56-7' else filename[4:-4]
         return Model.ModelKey(engine_family=engine_family,
                               flight_phase=flight_phase,
                               metric=metric)
