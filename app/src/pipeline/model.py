@@ -50,9 +50,9 @@ class Model:
     @staticmethod
     def _get_key_by_filename(filename: str) -> ModelKey:
         flight_phase: str = "TAKEOFF" if filename[1] == "t" else "CRUISE"
-        matches: list = [ef for ef in Model.ENGINE_FAMILIES if ef.lower().endswith(filename[2:4])]
+        matches: list = [ef for ef in Model.ENGINE_FAMILIES if ef.lower().endswith(filename[2:4].replace('_', ''))]
         if not matches:
-            raise Exception("Model error in pickle format. Couldn't find engine family")
+            raise Exception(f"Model error in pickle format. Couldn't find engine family {filename}")
         engine_family: str = matches[0]
         metric: str = filename[5:-4]
         return Model.ModelKey(engine_family=engine_family,
