@@ -9,10 +9,13 @@ def read_csv(path: str):
 
 def load_dataset() -> tuple[pd.DataFrame, pd.DataFrame]:
     with PageLayout() as page:
-        uploaded_file = page.file_uploader("Choose a file")
-        if uploaded_file is not None:
-            return pd.read_csv(uploaded_file.getvalue()), None
-        else:
+        uploaded_files = page.file_uploader("Choose a X.csv and y.csv", accept_multiple_files=True)
+        x, y = None, None
+        for file in uploaded_files: 
+            if file.name == 'X.csv':
+                x = pd.read_csv(file).astype({'flight_datetime': 'datetime64[ns]'})
+            else:
+                y = pd.read_csv(file).astype({'flight_datetime': 'datetime64[ns]'})
+        return x, y
 
-            return read_csv('src/pipeline/data/X.csv'), read_csv('src/pipeline/data/y.csv')
     
