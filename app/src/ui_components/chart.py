@@ -114,7 +114,7 @@ def slice_metrics(df: pd.Series, from_, to_):
 
 def metric_table(inference, metric_name, e_id, label):
 
-    with st.expander('Abs Error Table'):
+    with st.expander(f'Abs Error Table for {label}'):
         if st.button('Calculate abs error', key=f'{metric_name}_{e_id}_{label}'):
             with st.spinner('Calculating...'):
                 error = calculate_error(inference['real_y'], inference['predicted_y'], metric_name)
