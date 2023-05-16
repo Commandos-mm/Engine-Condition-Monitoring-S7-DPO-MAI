@@ -10,6 +10,7 @@ packages = [{include = "s7_engine_condition_calculator"}]
 python = "^3.10"
 streamlit = "^1.22.0"
 streamlit-nested-layout = "^0.1.1"
+catboost = "^1.2"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -1,7 +1,9 @@
 from typing import TypeAlias, Literal, TypedDict
 from collections import defaultdict
+from .model import Model
 
 import pandas as pd
+import streamlit as st
 
 
 class EngineDataset(TypedDict):
@@ -21,27 +23,34 @@ Inference: TypeAlias = dict[
 
 class Pipeline:
     def __init__(self, input: pd.DataFrame, ground_truth: pd.DataFrame = None) -> None:
-        self.input: pd.DataFrame = input
+        self.raw_input: pd.DataFrame = input
+        self.grouped_input: dict[tuple[str, str], pd.DataFrame] = {
+            (ef, fp): df for (ef, fp), df in self.raw_input.groupby(["engine_family", "flight_phase"])
+        }
         self.gt: pd.DataFrame = ground_truth
-        self.predicted: pd.DataFrame | None = None
+        self.predicted: dict[tuple[str, str], pd.DataFrame] | None = None
+        self._preprocess()
+        self.model = Model()
+
+    def _preprocess(self):
+        for _, df in self.grouped_input.items():
+            Pipeline._validate(df)
+
+    @staticmethod
+    def _validate(df: pd.DataFrame):
+        df.dropna(axis='columns', thresh=20, inplace=True)
+        df.dropna(inplace=True)
 
     def predict(self) -> None:
-        self.predicted: pd.DataFrame = (
-            pd.read_csv("src/pipeline/data/y.csv")
-            .astype({'flight_datetime': 'datetime64[ns]'})
-        )
+        self.predicted = self.model.predict(self.grouped_input)
 
     def get_fmt_data(self) -> Inference:
-        sub_input: pd.DataFrame = self.input[[
-            "engine_id", 
-            "flight_datetime", 
-            "flight_phase", 
+        sub_input: pd.DataFrame = self.raw_input[[
+            "engine_id",
+            "flight_datetime",
+            "flight_phase",
             "engine_family"
         ]]
-        predicted_df: pd.DataFrame = pd.merge(
-            sub_input, self.predicted,
-            on=["engine_id", "flight_datetime", "flight_phase"]
-        )
         gt_df = None
         if self.gt is not None:
             gt_df = pd.merge(
@@ -49,34 +58,38 @@ class Pipeline:
                 on=["engine_id", "flight_datetime", "flight_phase"]
             )
 
-        grouped_output = defaultdict(lambda: defaultdict(dict))
+        grouped_gt = None
         if gt_df is not None:
-            for ((ef, ei, fp), pgdf), (_, gtdf) in zip(
-                predicted_df.groupby(["engine_family", "engine_id", "flight_phase"]),
-                gt_df.groupby(["engine_family", "engine_id", "flight_phase"])
-            ):
-                grouped_output[ef][ei][fp] = EngineDataset(
-                    predicted_y=pgdf, 
-                    real_y=gtdf
-                )
-                grouped_output[ef][ei][fp]["predicted_y"].drop(
-                    columns=["engine_family", "engine_id", "flight_phase"],
-                    inplace=True
-                )
-                grouped_output[ef][ei][fp]["real_y"].drop(
-                    columns=["engine_family", "engine_id", "flight_phase"],
-                    inplace=True
-                )
+            grouped_gt = defaultdict(lambda: defaultdict(dict))
+            for (ef, ei, fp), ggt in gt_df.groupby(["engine_family", "engine_id", "flight_phase"]):
+                grouped_gt[ef][ei][fp] = ggt
+
+        grouped_output = defaultdict(lambda: defaultdict(dict))
+        if grouped_gt is not None:
+            for (ef, fp), subdf in self.predicted.items():
+                for ei, pdf in subdf.groupby("engine_id"):
+                    grouped_output[ef][ei][fp] = EngineDataset(
+                        predicted_y=pdf,
+                        real_y=grouped_gt[ef][ei][fp]
+                    )
+                    grouped_output[ef][ei][fp]["predicted_y"].drop(
+                        columns=["engine_family", "engine_id", "flight_phase"],
+                        inplace=True
+                    )
+                    grouped_output[ef][ei][fp]["real_y"].drop(
+                        columns=["engine_family", "engine_id", "flight_phase"],
+                        inplace=True
+                    )
         else:
-            for (ef, ei, fp), pgdf in predicted_df.groupby(
-                ["engine_family", "engine_id", "flight_phase"]
-            ):
-                grouped_output[ef][ei][fp] = EngineDataset(
-                    predicted_y=pgdf, 
-                    real_y=None
-                )
-                grouped_output[ef][ei][fp]["predicted_y"].drop(
-                    columns=["engine_family", "engine_id", "flight_phase"],
-                    inplace=True
-                )
+            for (ef, fp), subdf in self.predicted.items():
+                for ei, pdf in subdf.groupby("engine_id"):
+                    grouped_output[ef][ei][fp] = EngineDataset(
+                        predicted_y=pdf,
+                        real_y=None
+                    )
+                    grouped_output[ef][ei][fp]["predicted_y"].drop(
+                        columns=["engine_family", "engine_id", "flight_phase"],
+                        inplace=True
+                    )
+
         return grouped_output

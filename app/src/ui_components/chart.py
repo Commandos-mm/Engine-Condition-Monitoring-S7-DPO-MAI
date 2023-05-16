@@ -39,6 +39,7 @@ METRIC_DECRIPTION = {
     'ZWF36_D': 'DVG FUEL FLOW',
 }
 
+
 def get_dates_range(engine_df: dict[str, pd.DataFrame]):
     min_takeoff_ts, max_takeoff_ts = engine_df['TAKEOFF']["predicted_y"]['flight_datetime'].agg(['min', 'max'])
     min_cruise_ts, max_cruise_ts = engine_df['CRUISE']["predicted_y"]['flight_datetime'].agg(['min', 'max'])
