@@ -77,18 +77,28 @@ def slice_df(datasets: dict[str, pd.DataFrame], ts_range):
 
 
 def metric_graphics(metric_name: str, engine_inference, date_range, e_id):
-    with st.expander(metric_name):
-        chartl = get_chart(slice_df(engine_inference['TAKEOFF'], date_range), metric_name)
-        chartr = get_chart(slice_df(engine_inference['CRUISE'], date_range), metric_name)
-        with PageLayout() as page:
+    with st.expander(metric_name), PageLayout() as page:
+        engine_takeoff_inference = engine_inference.get('TAKEOFF')
+        if engine_takeoff_inference and metric_name in engine_takeoff_inference['predicted_y'].columns:
+            chartl = get_chart(slice_df(engine_takeoff_inference, date_range), metric_name)
             page.write("Takeoff")
             page.altair_chart(chartl, theme="streamlit", use_container_width=True)
+        
+        engine_cruise_inference = engine_inference.get('CRUISE')
+        if engine_cruise_inference and metric_name in engine_cruise_inference['predicted_y'].columns:
+            chartr = get_chart(slice_df(engine_cruise_inference, date_range), metric_name)
             page.write("Cruise")
             page.altair_chart(chartr, theme="streamlit", use_container_width=True)
 
-            if desc := METRIC_DECRIPTION.get(metric_name):
-                page.markdown(f"{metric_name} — {desc}")
-            metric_table(engine_inference['TAKEOFF'], metric_name, e_id)
+        if desc := METRIC_DECRIPTION.get(metric_name):
+            page.markdown(f"{metric_name} — {desc}")
+        
+        if  engine_takeoff_inference and metric_name in engine_takeoff_inference['predicted_y'].columns:
+            metric_table(engine_takeoff_inference, metric_name, e_id, 'takeoff')
+        
+        if engine_cruise_inference and metric_name in engine_cruise_inference['predicted_y'].columns:
+            metric_table(engine_cruise_inference, metric_name, e_id, 'cruise')
+        
 
 
 def calculate_error(real_y: pd.DataFrame, predicted_y, metric_name):
@@ -102,20 +112,18 @@ def slice_metrics(df: pd.Series, from_, to_):
     return df[ (df >= from_) & (df <= to_) ]
 
 
-def metric_table(inference, metric_name, e_id):
+def metric_table(inference, metric_name, e_id, label):
 
     with st.expander('Abs Error Table'):
-        if st.button('Calculate abs error', key=f'{metric_name}_{e_id}'):
+        if st.button('Calculate abs error', key=f'{metric_name}_{e_id}_{label}'):
             with st.spinner('Calculating...'):
                 error = calculate_error(inference['real_y'], inference['predicted_y'], metric_name)
             
             if not error.empty and error.isnull().values.any():
                 print('Escape')
                 return
-            min_v, max_v = error.agg(['min', 'max'])
-            lborder, rborder = st.slider('Error value', value=(min_v, max_v))
 
-            error = slice_metrics(error, lborder, rborder).to_frame().style.applymap(color_metric)
+            error = error.to_frame().style.applymap(color_metric)
             
             st.table(error)
             
@@ -133,7 +141,7 @@ def color_metric(val):
 
 
 def engine_graphics(engine_inference, date_range, e_id):
-    metric_names = set(engine_inference['TAKEOFF']['predicted_y'].columns).difference(['flight_datetime'])
+    metric_names = set(engine_inference['TAKEOFF']['predicted_y'].columns).union(engine_inference['CRUISE']['predicted_y']).difference(['flight_datetime'])
 
     for metric_name in metric_names:
         metric_graphics(metric_name, engine_inference, date_range, e_id)
