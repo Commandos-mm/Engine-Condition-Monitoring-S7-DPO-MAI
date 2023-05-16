@@ -82,13 +82,13 @@ def metric_graphics(metric_name: str, engine_inference, date_range, e_id):
         if engine_takeoff_inference and metric_name in engine_takeoff_inference['predicted_y'].columns:
             chartl = get_chart(slice_df(engine_takeoff_inference, date_range), metric_name)
             page.write("Takeoff")
-            page.altair_chart(chartl, theme="streamlit", use_container_width=True)
+            page.altair_chart(chartl, theme=None, use_container_width=True)
         
         engine_cruise_inference = engine_inference.get('CRUISE')
         if engine_cruise_inference and metric_name in engine_cruise_inference['predicted_y'].columns:
             chartr = get_chart(slice_df(engine_cruise_inference, date_range), metric_name)
             page.write("Cruise")
-            page.altair_chart(chartr, theme="streamlit", use_container_width=True)
+            page.altair_chart(chartr, theme=None, use_container_width=True)
 
         if desc := METRIC_DECRIPTION.get(metric_name):
             page.markdown(f"{metric_name} — {desc}")
@@ -159,6 +159,18 @@ def get_chart(datasets: dict[str, pd.DataFrame], metric_name: str) -> alt.Chart:
     )
     color_options = {}
     drawing_dataset = predicted_y
+
+    real_y = datasets.get('real_y')
+    if real_y is not None:
+        real_y = (
+            real_y[['flight_datetime', metric_name]]
+        )
+
+        predicted_y['label'] = 'predicted_y'
+        real_y['label'] = 'real_y'
+        color_options['color'] = 'label:N'
+        drawing_dataset = pd.concat((predicted_y, real_y))
+
     
 
     chart = (
