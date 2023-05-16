@@ -1,1 +1,1 @@
-from .predictor import predict
+from .predictor import Pipeline
