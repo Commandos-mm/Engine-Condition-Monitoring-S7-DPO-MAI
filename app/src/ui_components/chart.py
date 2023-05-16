@@ -106,26 +106,27 @@ def calculate_error(real_y: pd.DataFrame, predicted_y, metric_name):
     merged_df = merged_df.set_index('flight_datetime')
     return (
         (merged_df[f'{metric_name}_x'] - merged_df[f'{metric_name}_y']).abs()
-    )
+    ).dropna()
 
 def slice_metrics(df: pd.Series, from_, to_):
     return df[ (df >= from_) & (df <= to_) ]
 
 
 def metric_table(inference, metric_name, e_id, label):
+    if not st.button('Calculate abs error', key=f'{metric_name}_{e_id}_{label}'):
+        return
+    with st.expander(f'Abs Error Table for {label}', expanded=True):
+        # if st.button('Calculate abs error', key=f'{metric_name}_{e_id}_{label}'):
 
-    with st.expander(f'Abs Error Table for {label}'):
-        if st.button('Calculate abs error', key=f'{metric_name}_{e_id}_{label}'):
-            with st.spinner('Calculating...'):
-                error = calculate_error(inference['real_y'], inference['predicted_y'], metric_name)
-            
-            if not error.empty and error.isnull().values.any():
-                print('Escape')
-                return
+        error = calculate_error(inference['real_y'], inference['predicted_y'], metric_name)
+        
+        if not error.empty and error.isnull().values.any():
+            print('Escape')
+            return
 
-            error = error.to_frame().style.applymap(color_metric)
-            
-            st.table(error)
+        error = error.to_frame().style.applymap(color_metric)
+        
+        st.table(error)
             
         
 
